@@ -1,0 +1,87 @@
+{
+  "input_name": "CWE - File & Path Security",
+  "analysis_method": "LLM",
+  "status": "success",
+  "result": {
+    "finding": "Assessed 5 CWE rules in File & Path Security: 3 FOUND, 2 NOT_FOUND",
+    "confidence": "high",
+    "evidence": ["Scanned application source files for file & path security patterns"],
+    "values": [
+      {
+        "id": "CWE-22",
+        "name": "Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+        "status": "FOUND",
+        "category": "File & Path Security",
+        "severity": "optional",
+        "storyPoint": 8,
+        "description": "The product uses external input to construct a pathname that is intended to identify a file or directory that is located underneath a restricted parent directory, but the product does not properly neutralize special elements within the pathname that can cause the pathname to resolve to a location that is outside of the restricted directory.",
+        "evidence": {
+          "files": [
+            "litemall-core/src/main/java/org/linlinjava/litemall/core/storage/LocalStorage.java",
+            "litemall-wx-api/src/main/java/org/linlinjava/litemall/wx/web/WxStorageController.java"
+          ],
+          "explanation": "In LocalStorage.java, the store() method at line 57 calls rootLocation.resolve(keyName) where keyName is derived from user-supplied file extension (originalFilename). In WxStorageController.java, the fetch() (line 67) and download() (line 92) endpoints pass a user-supplied URL path variable key directly to storageService.loadAsResource(key) (lines 78, 104). The partial mitigation at lines 72-74 and 97-99 only checks for '../' literal but does not neutralize URL-encoded traversal sequences or absolute paths."
+        }
+      },
+      {
+        "id": "CWE-23",
+        "name": "Relative Path Traversal",
+        "status": "FOUND",
+        "category": "File & Path Security",
+        "severity": "optional",
+        "storyPoint": 5,
+        "description": "The product uses external input to construct a pathname that should be within a restricted directory, but it does not properly neutralize sequences such as .. that can resolve to a location that is outside of that directory.",
+        "evidence": {
+          "files": [
+            "litemall-wx-api/src/main/java/org/linlinjava/litemall/wx/web/WxStorageController.java"
+          ],
+          "explanation": "WxStorageController.fetch() and download() methods check only for the literal string '../' (lines 72 and 97), but do not handle URL-encoded variants such as '%2E%2E%2F', '%2E%2E/', or '.%2F'. A user-supplied key containing an encoded relative traversal sequence bypasses the check and is passed to LocalStorage.load(filename) at line 77 (LocalStorage.java) which uses rootLocation.resolve(filename) without further sanitization."
+        }
+      },
+      {
+        "id": "CWE-36",
+        "name": "Absolute Path Traversal",
+        "status": "NOT_FOUND",
+        "category": "File & Path Security",
+        "severity": "optional",
+        "storyPoint": 5,
+        "description": "The product uses external input to construct a pathname that should be within a restricted directory, but it does not properly neutralize absolute path sequences such as /abs/path that can resolve to a location that is outside of that directory.",
+        "evidence": {
+          "files": [],
+          "explanation": ""
+        }
+      },
+      {
+        "id": "CWE-434",
+        "name": "Unrestricted Upload of File with Dangerous Type",
+        "status": "FOUND",
+        "category": "File & Path Security",
+        "severity": "mandatory",
+        "storyPoint": 8,
+        "description": "The product allows the upload or transfer of dangerous file types that are automatically processed within its environment.",
+        "evidence": {
+          "files": [
+            "litemall-admin-api/src/main/java/org/linlinjava/litemall/admin/web/AdminStorageController.java",
+            "litemall-wx-api/src/main/java/org/linlinjava/litemall/wx/web/WxStorageController.java"
+          ],
+          "explanation": "AdminStorageController.create() at line 49 and WxStorageController.upload() at line 54 both accept any MultipartFile upload without validating the file type, extension, or MIME type. The originalFilename is passed directly to storageService.store() without any whitelist or blacklist of allowed file types. This allows uploading dangerous file types such as .jsp, .exe, or .sh which could be executed by the server."
+        }
+      },
+      {
+        "id": "CWE-611",
+        "name": "Improper Restriction of XML External Entity Reference",
+        "status": "NOT_FOUND",
+        "category": "File & Path Security",
+        "severity": "optional",
+        "storyPoint": 5,
+        "description": "The product processes an XML document that can contain XML entities with URIs that resolve to documents outside of the intended sphere of control, causing the product to embed incorrect documents into its output.",
+        "evidence": {
+          "files": [],
+          "explanation": ""
+        }
+      }
+    ]
+  },
+  "execution_time_seconds": 0,
+  "timestamp": ""
+}

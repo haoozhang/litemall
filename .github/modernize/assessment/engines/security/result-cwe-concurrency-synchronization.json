@@ -1,0 +1,85 @@
+{
+  "input_name": "CWE - Concurrency & Synchronization",
+  "analysis_method": "LLM",
+  "status": "success",
+  "result": {
+    "finding": "Assessed 6 CWE rules in Concurrency & Synchronization: 2 FOUND, 4 NOT_FOUND",
+    "confidence": "high",
+    "evidence": ["Scanned application source files for concurrency & synchronization patterns"],
+    "values": [
+      {
+        "id": "CWE-543",
+        "name": "Use of Singleton Pattern Without Synchronization in a Multithreaded Context",
+        "status": "NOT_FOUND",
+        "category": "Concurrency & Synchronization",
+        "severity": "potential",
+        "storyPoint": 5,
+        "description": "The product uses the singleton pattern when creating a resource within a multithreaded environment.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-567",
+        "name": "Unsynchronized Access to Shared Data in a Multithreaded Context",
+        "status": "FOUND",
+        "category": "Concurrency & Synchronization",
+        "severity": "potential",
+        "storyPoint": 5,
+        "description": "The product does not properly synchronize shared data, such as static variables across threads, which can lead to undefined behavior and unpredictable data changes.",
+        "evidence": {
+          "files": [
+            "litemall-wx-api/src/main/java/org/linlinjava/litemall/wx/service/HomeCacheManager.java"
+          ],
+          "explanation": "HomeCacheManager.java declares a static mutable field `cacheDataList` (line 17) without the `volatile` keyword. The `clearAll()` method at line 70 reassigns the entire reference: `cacheDataList = new ConcurrentHashMap<>()`. In a multi-threaded environment, threads that have already read the old reference will continue operating on the old ConcurrentHashMap instance after clearAll() replaces it, leading to inconsistent cache state. Additionally, the check-then-act pattern in loadData() (lines 25-37: get, then put) is not atomic, allowing race conditions between concurrent requests."
+        }
+      },
+      {
+        "id": "CWE-662",
+        "name": "Improper Synchronization",
+        "status": "NOT_FOUND",
+        "category": "Concurrency & Synchronization",
+        "severity": "potential",
+        "storyPoint": 8,
+        "description": "The product utilizes multiple threads or processes to allow temporary access to a shared resource that can only be exclusive to one process at a time, but it does not properly synchronize these actions, which might cause simultaneous accesses of this resource by multiple threads or processes.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-667",
+        "name": "Improper Locking",
+        "status": "NOT_FOUND",
+        "category": "Concurrency & Synchronization",
+        "severity": "potential",
+        "storyPoint": 8,
+        "description": "The product does not properly acquire or release a lock on a resource, leading to unexpected resource state changes and behaviors.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-820",
+        "name": "Missing Synchronization",
+        "status": "FOUND",
+        "category": "Concurrency & Synchronization",
+        "severity": "potential",
+        "storyPoint": 8,
+        "description": "The product utilizes a shared resource in a concurrent manner but does not attempt to synchronize access to the resource.",
+        "evidence": {
+          "files": [
+            "litemall-wx-api/src/main/java/org/linlinjava/litemall/wx/web/WxHomeController.java",
+            "litemall-wx-api/src/main/java/org/linlinjava/litemall/wx/web/WxGoodsController.java"
+          ],
+          "explanation": "WxHomeController.java line 60 and WxGoodsController.java line 80 declare static `ThreadPoolExecutor executorService` fields that are not declared `volatile` and are not `final`. These shared thread pool references are accessed concurrently by multiple request threads without any synchronization. The absence of `volatile` means the JVM is free to cache the field value in CPU registers, potentially causing threads to use stale executor references. In WxHomeController, all 9 async tasks (lines 122-130) submit to this unsynchronized static executor."
+        }
+      },
+      {
+        "id": "CWE-821",
+        "name": "Incorrect Synchronization",
+        "status": "NOT_FOUND",
+        "category": "Concurrency & Synchronization",
+        "severity": "potential",
+        "storyPoint": 8,
+        "description": "The product utilizes a shared resource in a concurrent manner, but it does not correctly synchronize access to the resource.",
+        "evidence": { "files": [], "explanation": "" }
+      }
+    ]
+  },
+  "execution_time_seconds": 0,
+  "timestamp": ""
+}
